@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # Full path to the directory
     WATCHDIR = os.path.join(
         os.getcwd(),
-        config.PATH_TO_WATCH
+        config.MONITOR_PATH
     )
 
     # Channel to send messages to
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # Discord Bot Object
     bot = commands.Bot(
-        command_prefix=config.COMMAND_PREFIX,
+        command_prefix="",
         intents=intents.intents
     )
 
@@ -48,13 +48,13 @@ if __name__ == '__main__':
         upload_files.start()
 
         # Set the global channel object to the channel
-        CHANNEL = bot.get_channel(config.CHANNEL_ID)
+        CHANNEL = bot.get_channel(config.DISCORD_CHANNEL)
 
         log.write_log("Bot ready.", "success")
 
     # Scheduled Task
 
-    @tasks.loop(seconds=config.DELAY_SECONDS)
+    @tasks.loop(seconds=config.MONITOR_DELAY)
     async def upload_files():
 
         # Global Variables
