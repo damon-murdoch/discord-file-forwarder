@@ -1,0 +1,8 @@
+# Cache Files
+*__pycache__
+
+# Test Directory
+upload
+
+# Real config file
+config.py
