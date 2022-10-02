@@ -86,7 +86,7 @@ if __name__ == '__main__':
                 filepath = os.path.join(WATCHDIR, file)
 
                 log.write_log(
-                    f"Sending file: [{file}] ...",
+                    f"Sending file: {file} [{filepath}] ...",
                     "info"
                 )
 
