@@ -1,6 +1,8 @@
 # Cache Files
 *__pycache__
 
+*.log
+
 # Test Directory
 upload
 
