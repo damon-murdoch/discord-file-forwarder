@@ -1,3 +1,4 @@
+from genericpath import isfile
 import os
 
 import discord
@@ -82,21 +83,37 @@ if __name__ == '__main__':
             # Loop over the new files
             for file in diff:
 
-                # Get the full path to the new file
-                filepath = os.path.join(WATCHDIR, file)
+                try:
 
-                log.write_log(
-                    f"Sending file: {file} [{filepath}] ...",
-                    "info"
-                )
+                    # Get the full path to the new file
+                    filepath = os.path.join(WATCHDIR, file)
 
-                # Send the file to the channel
-                await CHANNEL.send(file=discord.File(filepath))
+                    # If the filepath exists
+                    if os.path.isfile(filepath):
 
-                log.write_log(
-                    "File sent.",
-                    "success"
-                )
+                        log.write_log(
+                            f"Sending file: [{file}] ...",
+                            "info"
+                        )
+
+                        # Send the file to the channel
+                        await CHANNEL.send(file=discord.File(filepath))
+
+                        log.write_log(
+                            "File sent.",
+                            "success"
+                        )
+
+                    else:  # Could not find file
+
+                        raise Exception("File not found / not a file!")
+
+                except Exception as e:  # Failed to read file
+
+                    log.write_log(
+                        f"Failed to send file: [{file}]! {str(e)}",
+                        "error"
+                    )
 
         else:  # Otherwise, no changes detected
 
