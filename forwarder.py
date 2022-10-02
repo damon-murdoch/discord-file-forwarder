@@ -97,10 +97,7 @@ if __name__ == '__main__':
                         )
 
                         # Send the file to the channel
-                        await CHANNEL.send(
-                            f"Filename: {file}",
-                            file=discord.File(filepath)
-                        )
+                        await CHANNEL.send(file=discord.File(filepath))
 
                         log.write_log(
                             "File sent.",
