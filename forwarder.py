@@ -78,8 +78,9 @@ if __name__ == '__main__':
         # Empty the global array
         RETRY = []
 
-        # Get the difference between the two lists
-        diff = files - FILES + retry
+        # Get the difference between the
+        # two lists, and add the retry list
+        diff = (files - FILES) | retry
 
         # At least one file found
         if len(diff) > 0:
