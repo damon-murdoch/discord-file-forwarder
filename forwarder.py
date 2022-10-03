@@ -26,6 +26,9 @@ if __name__ == '__main__':
     # directory we are monitoring
     FILES = set(os.listdir(WATCHDIR))
 
+    # Files which should be re-attempted
+    RETRY = []
+
     # Bot startup event
     log.write_log("Bot starting ...", "info")
 
@@ -59,7 +62,7 @@ if __name__ == '__main__':
     async def upload_files():
 
         # Global Variables
-        global FILES, WATCHDIR, CHANNEL
+        global FILES, RETRY, WATCHDIR, CHANNEL
 
         log.write_log(
             "Checking for new files ...",
@@ -69,8 +72,14 @@ if __name__ == '__main__':
         # Get the current files in the directory
         files = set(os.listdir(WATCHDIR))
 
+        # Get the files which should be re-attempted
+        retry = set(RETRY)
+
+        # Empty the global array
+        RETRY = []
+
         # Get the difference between the two lists
-        diff = files - FILES
+        diff = files - FILES + retry
 
         # At least one file found
         if len(diff) > 0:
@@ -91,6 +100,13 @@ if __name__ == '__main__':
                     # If the filepath exists
                     if os.path.isfile(filepath):
 
+                        # Get the stats for the file
+                        stats = os.stat(filepath)
+
+                        # If the file's size is 0 bytes
+                        if stats.st_size == 0:
+                            raise Exception("File is empty / not finished!")
+
                         log.write_log(
                             f"Sending file: [{file}] ...",
                             "info"
@@ -105,7 +121,6 @@ if __name__ == '__main__':
                         )
 
                     else:  # Could not find file
-
                         raise Exception("File not found / not a file!")
 
                 except Exception as e:  # Failed to read file
@@ -113,6 +128,14 @@ if __name__ == '__main__':
                     log.write_log(
                         f"Failed to send file: [{file}]! {str(e)}",
                         "error"
+                    )
+
+                    # Add the file to the retry list
+                    RETRY.append(file)
+
+                    log.write_log(
+                        f"File [{file}] added to retry list.",
+                        "info"
                     )
 
         else:  # Otherwise, no changes detected
