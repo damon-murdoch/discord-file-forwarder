@@ -1,14 +1,16 @@
 # File Configuration
 LOG_FILE = 'forwarder.log'
 
-# Path(s) to check for new files
-MONITOR_PATH = "path_to_files"
+# List of paths to monitor, and the channels to forward to
+MONITOR = [
+    {
+        "path": "your_file_or_folder",
+        "channel": 0
+    }
+]
 
 # Seconds between checks
 MONITOR_DELAY = 5
 
 # API Token
 DISCORD_TOKEN = 'discord_api_token'
-
-# Channel ID
-DISCORD_CHANNEL = 0

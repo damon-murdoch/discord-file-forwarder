@@ -5,6 +5,10 @@ import discord
 from discord.ext import commands
 from discord.ext import tasks
 
+# File / Directory Watcher Classes
+import watcher.dir_watcher as dir_watcher
+import watcher.file_watcher as file_watcher
+
 import util.log as log
 
 import intents
@@ -13,21 +17,8 @@ import config
 # This script is being called
 if __name__ == '__main__':
 
-    # Full path to the directory
-    WATCHDIR = os.path.join(
-        os.getcwd(),
-        config.MONITOR_PATH
-    )
-
-    # Channel to send messages to
-    CHANNEL = None
-
-    # Get all of the files in the
-    # directory we are monitoring
-    FILES = set(os.listdir(WATCHDIR))
-
-    # Files which should be re-attempted
-    RETRY = []
+    # List of watchers
+    WATCHERS = []
 
     # Bot startup event
     log.write_log("Bot starting ...", "info")
@@ -46,13 +37,43 @@ if __name__ == '__main__':
     @bot.event
     async def on_ready():
 
-        global CHANNEL
-
         # Start the file loop
         upload_files.start()
 
         # Set the global channel object to the channel
-        CHANNEL = bot.get_channel(config.DISCORD_CHANNEL)
+        # CHANNEL = bot.get_channel(config.DISCORD_CHANNEL)
+        for watcher in config.MONITOR:
+
+            try:
+
+                # Get the absolute path to the directory
+                path = os.path.abspath(watcher["path"])
+
+                # Get the discord channel id to forward to
+                channel = watcher["channel"]
+
+                # Path is a file
+                if os.path.isfile(path):
+
+                    # Create file watcher object
+                    #WATCHERS.append(file_watcher.Watcher(path, channel))
+                    pass
+
+                # Path is a directory
+                elif os.path.isdir(path):
+
+                    # Create the dir watcher object
+                    WATCHERS.append(dir_watcher.Watcher(path, channel))
+
+                else:  # Not a file / folder
+                    raise Exception(f"Not a file or folder: {path}!")
+
+            except Exception as e:  # General failure
+
+                log.write_log(
+                    f"Watcher skipped: {str(e)}",
+                    "error"
+                )
 
         log.write_log("Bot ready.", "success")
 
@@ -61,98 +82,46 @@ if __name__ == '__main__':
     @tasks.loop(seconds=config.MONITOR_DELAY)
     async def upload_files():
 
-        # Global Variables
-        global FILES, RETRY, WATCHDIR, CHANNEL
+        # List of file watchers
+        global WATCHERS
 
-        log.write_log(
-            "Checking for new files ...",
-            "info"
-        )
+        # Watcher Callback Function
+        async def callback(content, channel, isfile: bool):
 
-        # Get the current files in the directory
-        files = set(os.listdir(WATCHDIR))
+            try:
 
-        # Get the files which should be re-attempted
-        retry = set(RETRY)
+                # Get the channel with the id
+                channel = bot.get_channel(channel)
 
-        # Empty the global array
-        RETRY = []
+                # Message is a file
+                if isfile:
 
-        # Get the difference between the
-        # two lists, and add the retry list
-        diff = (files - FILES) | retry
+                    # Send the file to the channel
+                    await channel.send(file=discord.File(content))
 
-        # At least one file found
-        if len(diff) > 0:
+                else:  # Standard message
 
-            log.write_log(
-                f"New files found: {len(diff)}",
-                "success"
-            )
+                    # Send the message to the channel
+                    await channel.send(content)
 
-            # Loop over the new files
-            for file in diff:
+                # Sent successfully
+                return True
 
-                try:
+            # Failed to send message
+            except Exception as e:
 
-                    # Get the full path to the new file
-                    filepath = os.path.join(WATCHDIR, file)
+                log.write_log(
+                    f"Failed to send message: {str(e)}",
+                    "error"
+                )
 
-                    # If the filepath exists
-                    if os.path.isfile(filepath):
+                # Failed to send
+                return False
 
-                        # Get the stats for the file
-                        stats = os.stat(filepath)
+        # Loop over all of the watchers
+        for watcher in WATCHERS:
+            
+            # Update the watcher using the callback
+            watcher.update(callback)
 
-                        # If the file's size is 0 bytes
-                        if stats.st_size == 0:
-                            raise Exception("File is empty / not finished!")
-
-                        log.write_log(
-                            f"Sending file: [{file}] ...",
-                            "info"
-                        )
-
-                        # Send the file to the channel
-                        await CHANNEL.send(file=discord.File(filepath))
-
-                        log.write_log(
-                            "File sent.",
-                            "success"
-                        )
-
-                    else:  # Could not find file
-                        raise Exception("File not found / not a file!")
-
-                except Exception as e:  # Failed to read file
-
-                    log.write_log(
-                        f"Failed to send file: [{file}]! {str(e)}",
-                        "error"
-                    )
-
-                    # Add the file to the retry list
-                    RETRY.append(file)
-
-                    log.write_log(
-                        f"File [{file}] added to retry list.",
-                        "info"
-                    )
-
-        else:  # Otherwise, no changes detected
-
-            log.write_log(
-                f"No new files.",
-                "info"
-            )
-
-        # Update the files list
-        FILES = files
-
-        log.write_log(
-            f"File list updated.",
-            "success"
-        )
-
-    # Run the client using the discord token
     bot.run(config.DISCORD_TOKEN)
