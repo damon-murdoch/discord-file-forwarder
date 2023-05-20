@@ -64,12 +64,12 @@ if __name__ == '__main__':
         upload_files.start()
 
         # Get discord channel id to forward to (Error on null)
-        channel = common.get_env('DISCORD_CHANNEL', errorOnNull=True)
+        channel = int(common.get_env('DISCORD_CHANNEL', errorOnNull=True))
 
         log.write_log(f"Uploading to channel '{channel}' ...", "info")
 
         # Set the global channel object to the channel
-        CHANNEL = int(bot.get_channel(channel))
+        CHANNEL = bot.get_channel(channel)
 
         log.write_log("Bot ready.", "success")
 
