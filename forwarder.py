@@ -1,23 +1,35 @@
+# External Libraries
 from genericpath import isfile
+from dotenv import load_dotenv
 import os
 
-import discord
+# Discord
 from discord.ext import commands
 from discord.ext import tasks
-
-import util.log as log
-
 import intents
-import config
+import discord
+
+# Internal Libraries
+import util.common as common
+import util.log as log
 
 # This script is being called
 if __name__ == '__main__':
 
-    # Full path to the directory
-    WATCHDIR = os.path.join(
-        os.getcwd(),
-        config.MONITOR_PATH
-    )
+    # Load environment variables
+    load_dotenv()
+
+    # Discord bot token (Error if not set)
+    token = common.get_env('DISCORD_TOKEN', errorOnNull=True)
+
+    # Get environment variable for folder path to forward
+    path = common.get_env('MONITOR_PATH', default='monitor')
+
+    # Get delay in seconds between checking the path for files
+    delay = int(common.get_env('MONITOR_DELAY', default='5'))
+
+    # Build full path to the directory
+    WATCHDIR = os.path.join(os.getcwd(), path)
 
     # Channel to send messages to
     CHANNEL = None
@@ -51,14 +63,17 @@ if __name__ == '__main__':
         # Start the file loop
         upload_files.start()
 
+        # Get discord channel id to forward to (Error on null)
+        channel = common.get_env('DISCORD_CHANNEL', errorOnNull=True)
+
         # Set the global channel object to the channel
-        CHANNEL = bot.get_channel(config.DISCORD_CHANNEL)
+        CHANNEL = bot.get_channel(channel)
 
         log.write_log("Bot ready.", "success")
 
     # Scheduled Task
 
-    @tasks.loop(seconds=config.MONITOR_DELAY)
+    @tasks.loop(seconds=delay)
     async def upload_files():
 
         # Global Variables
@@ -155,4 +170,4 @@ if __name__ == '__main__':
         )
 
     # Run the client using the discord token
-    bot.run(config.DISCORD_TOKEN)
+    bot.run(token)

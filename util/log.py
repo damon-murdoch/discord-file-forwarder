@@ -1,13 +1,13 @@
 # Operating System Library
 import os
 
-# Configuration File
-import config
-
 from termcolor import colored
 
 # Python date & time library
 from datetime import datetime
+
+# Common Library
+import util.common as common
 
 # Log Type Enum
 log_type = {
@@ -22,6 +22,9 @@ log_type = {
 # Application log writer
 def write_log(message, type = "general"):
 
+  # Get log file path
+  logfile = common.get_env('LOG_FILE', default='forwarder.log')
+
   # Adds the timestamp to the message
   def timestamp_message(message):
 
@@ -32,19 +35,19 @@ def write_log(message, type = "general"):
     return "[" + timestamp + "] " + message
 
   # If a log file is defined
-  if config.LOG_FILE:
+  if logfile:
 
     # If the log file does not exist
-    if not os.path.exists(config.LOG_FILE):
+    if not os.path.exists(logfile):
 
       # Create the log file
-      with open(config.LOG_FILE, 'w') as f:
+      with open(logfile, 'w') as f:
 
         # Write the creation message to the log file
         f.write(timestamp_message("Log file created.\n"))
 
     # Open the log file with 'append'
-    with open(config.LOG_FILE, 'a', encoding='utf-8') as f:
+    with open(logfile, 'a', encoding='utf-8') as f:
 
       # Write the message to the log file
       f.write(timestamp_message(message + "\n"))
