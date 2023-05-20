@@ -69,7 +69,7 @@ if __name__ == '__main__':
         log.write_log(f"Uploading to channel '{channel}' ...", "info")
 
         # Set the global channel object to the channel
-        CHANNEL = bot.get_channel(channel)
+        CHANNEL = int(bot.get_channel(channel))
 
         log.write_log("Bot ready.", "success")
 
