@@ -8,3 +8,4 @@ upload
 
 # Real config file
 config.py
+.env
