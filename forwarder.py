@@ -115,7 +115,7 @@ if __name__ == "__main__":
                     try:
 
                         # Get the full path to the new file
-                        filepath = os.path.join(watchdir, file)
+                        filepath = os.path.join(watchdir['path'], file)
 
                         # If the filepath exists
                         if os.path.isfile(filepath):
