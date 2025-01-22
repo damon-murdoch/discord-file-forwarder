@@ -1,3 +1,4 @@
 discord
 termcolor
+audioop-lts
 python-dotenv
